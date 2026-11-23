@@ -146,6 +146,11 @@ Both tools use a throwaway vault in a temp folder and never touch your real one.
 - `keyhold/importers.py`: import and CSV export
 - `keyhold/ui/`: GTK interface
 
+## License
+
+Keyhold's code is released under the MIT License (see [LICENSE](LICENSE)). The bundled
+passphrase wordlist is the EFF's, under CC BY 3.0 US (see Credits).
+
 ## Credits
 
 Passphrase words come from the [EFF Large Wordlist](https://www.eff.org/dice) (CC BY 3.0 US).
