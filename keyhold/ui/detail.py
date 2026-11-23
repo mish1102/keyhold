@@ -5,6 +5,7 @@ from __future__ import annotations
 from gi.repository import Adw, Gtk, Pango
 
 from .. import totp, watchtower
+from ..system import shortcut_label
 from ..listing import display_title
 from ..model import CATEGORIES, FIELD_KINDS, Field, Item
 from .generator_popover import GeneratorPopover
@@ -40,7 +41,7 @@ class DetailPane(Gtk.Box):
         self.toolbar.set_vexpand(True)
 
         # View-mode header widgets
-        self.edit_button = Gtk.Button(label="Edit", tooltip_text="Edit (Ctrl+E)")
+        self.edit_button = Gtk.Button(label="Edit", tooltip_text=f"Edit ({shortcut_label('Ctrl+E')})")
         self.edit_button.connect("clicked", lambda *_: self.start_edit())
         self.fav_button = Gtk.ToggleButton(icon_name="non-starred-symbolic", tooltip_text="Favorite")
         self._fav_handler = self.fav_button.connect("toggled", self._on_fav_toggled)
@@ -49,7 +50,7 @@ class DetailPane(Gtk.Box):
         # Edit-mode header widgets
         self.cancel_button = Gtk.Button(label="Cancel")
         self.cancel_button.connect("clicked", lambda *_: self.cancel_edit())
-        self.save_button = Gtk.Button(label="Save", css_classes=["suggested-action"], tooltip_text="Save (Ctrl+S)")
+        self.save_button = Gtk.Button(label="Save", css_classes=["suggested-action"], tooltip_text=f"Save ({shortcut_label('Ctrl+S')})")
         self.save_button.connect("clicked", lambda *_: self.save_edit())
 
         self.header.pack_start(self.edit_button)

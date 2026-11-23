@@ -306,3 +306,39 @@ def test_default_data_dir_honors_env(monkeypatch, tmp_path):
     monkeypatch.delenv("KEYHOLD_DATA_DIR")
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "xdg"))
     assert store.default_vault_path() == tmp_path / "xdg" / "keyhold" / "vault.keyhold"
+
+
+def test_default_data_dir_on_macos(monkeypatch, tmp_path):
+    monkeypatch.delenv("KEYHOLD_DATA_DIR", raising=False)
+    monkeypatch.delenv("XDG_DATA_HOME", raising=False)
+    monkeypatch.setattr(store.sys, "platform", "darwin")
+    monkeypatch.setenv("HOME", str(tmp_path))
+    assert store.default_vault_path() == tmp_path / "Library" / "Application Support" / "Keyhold" / "vault.keyhold"
+
+
+def test_directory_fsync_failure_does_not_fail_a_completed_write(vs, monkeypatch):
+    s = vs.create("pw")
+    real_fsync = store.os.fsync
+
+    def picky_fsync(fd):
+        if stat.S_ISDIR(os.fstat(fd).st_mode):
+            raise OSError(errno.EINVAL, "Invalid argument")  # some filesystems/OSes
+        return real_fsync(fd)
+
+    monkeypatch.setattr(store.os, "fsync", picky_fsync)
+    add_login(s, title="Saved")
+    s.save()
+    monkeypatch.undo()
+    s.lock()
+    assert vs.unlock("pw").data.items[0].title == "Saved"
+
+
+def test_full_flush_used_when_the_os_offers_it(tmp_path, monkeypatch):
+    calls = []
+    monkeypatch.setattr(store.fcntl, "F_FULLFSYNC", 51, raising=False)
+    real_fcntl = store.fcntl.fcntl
+    monkeypatch.setattr(store.fcntl, "fcntl",
+                        lambda fd, op, *a: calls.append(op) or 0 if op == 51 else real_fcntl(fd, op, *a))
+    store.atomic_write(tmp_path / "f.bin", b"data")
+    assert 51 in calls
+    assert (tmp_path / "f.bin").read_bytes() == b"data"

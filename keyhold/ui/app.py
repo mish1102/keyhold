@@ -40,7 +40,7 @@ class KeyholdApp(Adw.Application):
         quit_action = Gio.SimpleAction.new("quit", None)
         quit_action.connect("activate", lambda *_: self.window.close() if self.window else self.quit())
         self.add_action(quit_action)
-        self.set_accels_for_action("app.quit", ["<Ctrl>q"])
+        self.set_accels_for_action("app.quit", ["<Primary>q"])
         self._watch_screen_lock()
 
     def _on_activate(self, *_):

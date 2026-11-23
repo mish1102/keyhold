@@ -35,9 +35,8 @@ def _scrub(widget: Gtk.Widget) -> None:
         child = child.get_next_sibling()
 
 
-def _clock() -> float:
-    """Seconds that keep counting while the computer is suspended."""
-    return time.clock_gettime(time.CLOCK_BOOTTIME)
+from ..system import clock as _clock  # noqa: E402  (keeps counting during sleep)
+from ..system import shortcut_label  # noqa: E402
 
 
 class MainWindow(Adw.ApplicationWindow):
@@ -84,7 +83,7 @@ class MainWindow(Adw.ApplicationWindow):
         menu_button = Gtk.MenuButton(icon_name="open-menu-symbolic", menu_model=self._main_menu(),
                                      tooltip_text="Main menu", primary=True)
         side_header.pack_end(menu_button)
-        lock_button = Gtk.Button(icon_name="system-lock-screen-symbolic", tooltip_text="Lock (Ctrl+L)",
+        lock_button = Gtk.Button(icon_name="system-lock-screen-symbolic", tooltip_text=f"Lock ({shortcut_label('Ctrl+L')})",
                                  action_name="win.lock")
         side_header.pack_end(lock_button)
         side_tb.add_top_bar(side_header)
@@ -104,7 +103,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.search.connect("activate", lambda *_: self.itemlist.focus_list())
         self.search.connect("stop-search", lambda *_: self.search.set_text(""))
         list_header.set_title_widget(self.search)
-        self.add_button = Gtk.MenuButton(icon_name="list-add-symbolic", tooltip_text="New item (Ctrl+N)",
+        self.add_button = Gtk.MenuButton(icon_name="list-add-symbolic", tooltip_text=f"New item ({shortcut_label('Ctrl+N')})",
                                          menu_model=self._new_item_menu())
         list_header.pack_end(self.add_button)
         list_tb.add_top_bar(list_header)
@@ -178,18 +177,18 @@ class MainWindow(Adw.ApplicationWindow):
             return action
 
         self.unlocked_actions = [
-            add("lock", lambda *_: self.lock(), ["<Ctrl>l"]),
-            add("search", lambda *_: self.search.grab_focus(), ["<Ctrl>f"]),
-            add("new-item", lambda _a, p: self.new_item(p.get_string()), ["<Ctrl>n"], GLib.VariantType.new("s")),
-            add("edit", lambda *_: self.detail.start_edit(), ["<Ctrl>e"]),
-            add("save", lambda *_: self.detail.save_edit(), ["<Ctrl>s"]),
-            add("generator", lambda *_: self.show_generator(), ["<Ctrl>g"]),
-            add("preferences", lambda *_: self.show_preferences(), ["<Ctrl>comma"]),
+            add("lock", lambda *_: self.lock(), ["<Primary>l"]),
+            add("search", lambda *_: self.search.grab_focus(), ["<Primary>f"]),
+            add("new-item", lambda _a, p: self.new_item(p.get_string()), ["<Primary>n"], GLib.VariantType.new("s")),
+            add("edit", lambda *_: self.detail.start_edit(), ["<Primary>e"]),
+            add("save", lambda *_: self.detail.save_edit(), ["<Primary>s"]),
+            add("generator", lambda *_: self.show_generator(), ["<Primary>g"]),
+            add("preferences", lambda *_: self.show_preferences(), ["<Primary>comma"]),
             add("import", lambda *_: self.import_file()),
             add("export-encrypted", lambda *_: self.export_encrypted()),
             add("export-csv", lambda *_: self.export_csv()),
         ]
-        add("shortcuts", lambda *_: self.show_shortcuts(), ["<Ctrl>question"])
+        add("shortcuts", lambda *_: self.show_shortcuts(), ["<Primary>question"])
         add("about", lambda *_: self.show_about())
         self.edit_actions = [a for a in self.unlocked_actions if a.get_name() in ("new-item", "edit", "import")]
 
@@ -197,8 +196,8 @@ class MainWindow(Adw.ApplicationWindow):
         # actions: GTK exports window actions on the session D-Bus, where any
         # other program could trigger them.
         shortcuts = Gtk.ShortcutController(scope=Gtk.ShortcutScope.GLOBAL)
-        for trigger, what in (("<Control><Shift>c", "password"), ("<Control><Shift>u", "username"),
-                              ("<Control><Shift>o", "totp")):
+        for trigger, what in (("<Primary><Shift>c", "password"), ("<Primary><Shift>u", "username"),
+                              ("<Primary><Shift>o", "totp")):
             shortcuts.add_shortcut(Gtk.Shortcut.new(
                 Gtk.ShortcutTrigger.parse_string(trigger),
                 Gtk.CallbackAction.new(lambda _w, _args, w=what: (self._copy_selected(w), True)[1])))
@@ -724,7 +723,7 @@ class MainWindow(Adw.ApplicationWindow):
                          margin_top=12, margin_bottom=18, margin_start=18, margin_end=18)
         for keys, what in rows:
             r = Adw.ActionRow(title=what)
-            r.add_suffix(Gtk.Label(label=keys, css_classes=["dim-label", "monospace"]))
+            r.add_suffix(Gtk.Label(label=shortcut_label(keys), css_classes=["dim-label", "monospace"]))
             lb.append(r)
         tb.set_content(lb)
         dialog.set_child(tb)

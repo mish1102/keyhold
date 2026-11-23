@@ -24,16 +24,64 @@ All screenshots use a made-up demo vault (`tools/demo_data.py`).
 
 ## Install and run
 
+### Linux
+
+You need GTK 4 and libadwaita for Python. They're already present on Ubuntu 24.04 with GNOME;
+otherwise run `sudo apt install python3-gi gir1.2-gtk-4.0 gir1.2-adw-1`.
+
 ```sh
+git clone https://github.com/mish1102/keyhold.git
+cd keyhold
 ./install.sh            # adds "Keyhold" to your app menu and a `keyhold` command
 keyhold
 ```
 
 `./install.sh --uninstall` removes the launcher, menu entry and icon. Your vault stays where it is.
 
-To run without installing: `./install.sh` first sets up `.venv`; then `.venv/bin/python -I -m keyhold`.
+### macOS (experimental)
 
-It requires `python3-gi`, `gir1.2-gtk-4.0` and `gir1.2-adw-1` (already present on Ubuntu 24.04 with GNOME).
+> **Not yet tested on a real Mac.** The installer and the macOS code paths have only been
+> checked on Linux. Please report what happens.
+
+1. Install [Homebrew](https://brew.sh) if you don't have it.
+2. Install Python, GTK 4 and libadwaita:
+   ```sh
+   brew install python gtk4 libadwaita pygobject3 adwaita-icon-theme librsvg
+   ```
+3. Get Keyhold and install it:
+   ```sh
+   git clone https://github.com/mish1102/keyhold.git ~/keyhold
+   cd ~/keyhold
+   ./install.sh
+   ```
+   This creates **Keyhold.app** in `~/Applications` (find it with Spotlight or Launchpad)
+   and a `keyhold` command in `~/.local/bin`.
+4. Open Keyhold and create your vault.
+
+Keep the `keyhold` folder where you cloned it: the app runs from there. To update, run
+`git pull` in that folder. To remove the app, run `./install.sh --uninstall` (your vault stays).
+
+How it differs on a Mac:
+
+- **Shortcuts:** use ⌘ instead of Ctrl (⌘L locks, ⌘⇧C copies the password, and so on).
+- **Where data lives:** `~/Library/Application Support/Keyhold/`.
+- **Locking:** Keyhold doesn't yet notice when the Mac's screen locks or the Mac goes to sleep;
+  it only locks after inactivity or when you press ⌘L. Set a short auto-lock time in
+  Preferences, and lock it yourself before you walk away.
+- **Clipboard managers:** copied passwords are still cleared after 90 seconds. But Mac clipboard
+  managers (Alfred, Raycast, Paste, …) may not recognize them as secret, so they could keep them
+  in their history. Exclude Keyhold in your clipboard manager's settings.
+- **Look and feel:** it looks like a GNOME app, not a native Mac app.
+
+**Moving between Linux and a Mac:** the vault format is the same, so you can copy
+`vault.keyhold` from one computer to the other and unlock it with the same master password.
+There's no sync. If you edit on both, the copy you move last replaces the other, so pick one
+computer as the main one.
+
+### Run without installing
+
+After `./install.sh` has set up `.venv` once, you can run `.venv/bin/python -I -m keyhold`
+from the folder.
 
 ## Features
 
@@ -54,6 +102,8 @@ It requires `python3-gi`, `gir1.2-gtk-4.0` and `gir1.2-adw-1` (already present o
 
 ## Keyboard shortcuts
 
+On a Mac, use ⌘ wherever the table says Ctrl.
+
 | Keys | Action |
 | --- | --- |
 | Ctrl+F | Search |
@@ -66,11 +116,13 @@ It requires `python3-gi`, `gir1.2-gtk-4.0` and `gir1.2-adw-1` (already present o
 
 ## Where your data lives
 
-| What | Where |
-| --- | --- |
-| Vault (encrypted) | `~/.local/share/keyhold/vault.keyhold` |
-| Automatic backups (encrypted) | `~/.local/share/keyhold/backups/` (the 10 most recent, plus one per day for 30 days) |
-| Theme and window size (not secret) | `~/.config/keyhold/config.json` |
+| What | Linux | macOS |
+| --- | --- | --- |
+| Vault (encrypted) | `~/.local/share/keyhold/vault.keyhold` | `~/Library/Application Support/Keyhold/vault.keyhold` |
+| Automatic backups (encrypted) | `~/.local/share/keyhold/backups/` | `~/Library/Application Support/Keyhold/backups/` |
+| Theme and window size (not secret) | `~/.config/keyhold/config.json` | `~/Library/Application Support/Keyhold/config.json` |
+
+Backups keep the 10 most recent saves, plus one per day for 30 days.
 
 The first save after each unlock copies the previous vault into `backups/`. A backup opens
 with the master password that was in use when it was made.
@@ -98,15 +150,15 @@ file off this computer (USB drive, another machine).
 - **File access:** files are created `0600` in a `0700` folder. An exclusive lock stops two
   copies of Keyhold from writing the same vault.
 - **Locking:**
-  - Keyhold locks after inactivity (default 10 minutes, counting time asleep), when the
-    screen locks, and before the computer sleeps.
+  - Keyhold locks after inactivity (default 10 minutes, counting time asleep). On Linux it
+    also locks when the screen locks and before the computer sleeps.
   - Locking wipes and closes any open dialogs.
   - An edit you were in the middle of, or a change that couldn't be saved, is kept
     encrypted in memory and restored when you unlock.
   - Quitting with unsaved work asks first.
 - **Clipboard:** copied secrets are cleared after 90 seconds, but only if the clipboard still
   holds what Keyhold put there. They are marked `x-kde-passwordManagerHint: secret`, so
-  clipboard managers that honor the hint (Klipper, CopyQ, GPaste) don't keep them in their history.
+  Linux clipboard managers that honor the hint (Klipper, CopyQ, GPaste) don't keep them in their history.
 - **Process hardening:**
   - Core dumps are disabled and the process is marked non-dumpable, which blocks same-user
     debuggers from reading its memory.

@@ -16,6 +16,7 @@ import fcntl
 import json
 import os
 import re
+import sys
 import tempfile
 import time
 from pathlib import Path
@@ -47,6 +48,9 @@ def default_vault_path() -> Path:
     override = os.environ.get("KEYHOLD_DATA_DIR")
     if override:
         return Path(override) / VAULT_FILENAME
+    if sys.platform == "darwin" and not os.environ.get("XDG_DATA_HOME"):
+        home = Path(os.environ.get("HOME") or Path.home())
+        return home / "Library" / "Application Support" / "Keyhold" / VAULT_FILENAME
     base = os.environ.get("XDG_DATA_HOME") or str(Path.home() / ".local" / "share")
     return Path(base) / "keyhold" / VAULT_FILENAME
 
@@ -56,10 +60,31 @@ def _ensure_private_dir(path: Path) -> None:
     os.chmod(path, 0o700)
 
 
+def _flush(fd: int) -> None:
+    """Get the bytes onto the disk. On macOS plain fsync() only reaches the
+    drive's cache; F_FULLFSYNC asks the drive to write it out."""
+    full = getattr(fcntl, "F_FULLFSYNC", None)
+    if full is not None:
+        try:
+            fcntl.fcntl(fd, full)
+            return
+        except OSError:
+            pass  # not supported by this filesystem: fall back to fsync
+    os.fsync(fd)
+
+
 def _fsync_dir(path: Path) -> None:
-    fd = os.open(path, os.O_RDONLY | os.O_DIRECTORY)
+    """Best effort: make the rename itself durable. Some systems refuse to
+    fsync a directory; the new file is already in place by then, so that
+    must not turn a completed save into a reported failure."""
+    try:
+        fd = os.open(path, os.O_RDONLY | os.O_DIRECTORY)
+    except OSError:
+        return
     try:
         os.fsync(fd)
+    except OSError:
+        pass
     finally:
         os.close(fd)
 
@@ -72,7 +97,7 @@ def atomic_write(path: Path, data: bytes) -> None:
         with os.fdopen(fd, "wb") as fh:
             fh.write(data)
             fh.flush()
-            os.fsync(fh.fileno())
+            _flush(fh.fileno())
         os.replace(tmp, path)
     except BaseException:
         try:

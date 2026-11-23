@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 from pathlib import Path
 
 ALLOWED = {"theme", "width", "height"}
@@ -15,6 +16,8 @@ def path() -> Path:
     base = os.environ.get("XDG_CONFIG_HOME") or str(Path.home() / ".config")
     if os.environ.get("KEYHOLD_DATA_DIR"):
         return Path(os.environ["KEYHOLD_DATA_DIR"]) / "config.json"
+    if sys.platform == "darwin" and not os.environ.get("XDG_CONFIG_HOME"):
+        return Path.home() / "Library" / "Application Support" / "Keyhold" / "config.json"
     return Path(base) / "keyhold" / "config.json"
 
 
