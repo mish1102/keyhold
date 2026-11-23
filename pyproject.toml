@@ -1,7 +1,7 @@
 [project]
 name = "keyhold"
 version = "0.1.0"
-description = "A local, encrypted password manager for Linux (GTK4 / libadwaita)."
+description = "A local, encrypted password manager for Linux and macOS (GTK4 / libadwaita)."
 requires-python = ">=3.12"
 license = { text = "MIT" }
 dependencies = ["cryptography>=46,<47", "zxcvbn==4.5.0"]

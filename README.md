@@ -1,6 +1,7 @@
 # Keyhold
 
-A password manager for Linux that keeps your vault on your own computer, encrypted.
+A password manager for Linux and macOS (experimental) that keeps your vault on your own
+computer, encrypted.
 It has a three-pane layout: vaults and Watchtower on the left, items in the middle, details on the right.
 It is built with GTK 4 and libadwaita.
 
