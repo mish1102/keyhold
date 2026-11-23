@@ -14,6 +14,17 @@ from .widgets import StrengthLabel
 MIN_MASTER_LEVEL = 2  # "Fair" (>= 50 bits) or better
 
 
+def display_path(path) -> str:
+    """Show paths under the home folder as ~/..."""
+    from pathlib import Path
+
+    path, home = Path(path), Path.home()
+    try:
+        return "~/" + str(path.relative_to(home))
+    except ValueError:
+        return str(path)
+
+
 def run_in_thread(work, done):
     """Run ``work()`` off the main loop, then ``done(result, error)`` on it."""
 
@@ -77,7 +88,7 @@ class UnlockPage(Gtk.Box):
         self.button.set_size_request(180, -1)
         self.button.connect("clicked", lambda *_: self.unlock())
         content.append(self.button)
-        path = Gtk.Label(label=str(store.path), css_classes=["caption", "dim-label"], wrap=True,
+        path = Gtk.Label(label=display_path(store.path), css_classes=["caption", "dim-label"], wrap=True,
                          wrap_mode=2, selectable=True, justify=Gtk.Justification.CENTER)
         content.append(path)
         self.append(_page(content))

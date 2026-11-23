@@ -76,6 +76,15 @@ def snap(widget, name: str, overlay: Gtk.Widget | None = None) -> bool:
     return True
 
 
+def _labels(widget):
+    child = widget.get_first_child()
+    while child is not None:
+        if isinstance(child, Gtk.Label):
+            yield child
+        yield from _labels(child)
+        child = child.get_next_sibling()
+
+
 def main():
     import json
 
@@ -180,6 +189,10 @@ def main():
         step(lambda: snap(win(), "11-locked-again"))
 
     def on_activate(*_):
+        # The demo vault lives in a temp folder; show the default location instead.
+        for label in _labels(app.window.unlock_page):
+            if label.get_text().endswith("vault.keyhold"):
+                label.set_text("~/.local/share/keyhold/vault.keyhold")
         GLib.timeout_add(800, run_steps)
 
     app.connect_after("activate", on_activate)

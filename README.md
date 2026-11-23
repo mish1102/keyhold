@@ -7,6 +7,21 @@ It is built with GTK 4 and libadwaita.
 Keyhold has no account, no cloud and no sync. Nothing leaves your computer unless you
 turn on Watchtower's online checks (see below).
 
+![Keyhold main window: sidebar with Watchtower and categories, item list, and a login with a live one-time code](docs/screenshots/main-dark.png)
+
+## Screenshots
+
+All screenshots use a made-up demo vault (`tools/demo_data.py`).
+
+| | |
+| --- | --- |
+| ![Light style](docs/screenshots/main-light.png) | ![Watchtower flags a weak password and an http:// website](docs/screenshots/watchtower.png) |
+| **Light style.** Follows your choice in Preferences. | **Watchtower.** Explains what's wrong with an item and what to do. |
+| ![Editing a login](docs/screenshots/editor.png) | ![Password generator](docs/screenshots/generator.png) |
+| **Editing.** Strength rating, built-in generator, custom fields. | **Generator.** Random, memorable words or PIN, with entropy shown. |
+| ![Lock screen](docs/screenshots/lock.png) | <img src="docs/screenshots/narrow.png" alt="Narrow window layout" width="420"> |
+| **Locked.** Auto-locks when idle, on screen lock and before sleep. | **Narrow windows.** The sidebar folds away behind a button. |
+
 ## Install and run
 
 ```sh
